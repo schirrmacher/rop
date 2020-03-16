@@ -1,5 +1,5 @@
 CC=gcc
-SECURITYFLAGS=-fno-stack-protector -D_FORTIFY_SOURCE=0
+SECURITYFLAGS=#-fno-stack-protector -D_FORTIFY_SOURCE=0
 DEST=build
 
 all: server

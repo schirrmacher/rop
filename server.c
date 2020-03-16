@@ -45,7 +45,7 @@ void start()
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(1337);
-    
+
     if (bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         perror("Could not bind socket");
@@ -67,7 +67,12 @@ void start()
 int main(int argc, char *argv[])
 {
     printf("\nWelcome to the ROP playground!\n\n");
-    printf("If ASLR is activated, use the following addresses:\n");
+
+    printf("Process ID: %i\n", getpid());
+    extern uintptr_t __stack_chk_guard;
+    printf("__stack_chk_guard: 0x%lx\n", __stack_chk_guard);
+    uintptr_t print_date_no_aslr = 0x100000ce0;
+    printf("ASLR binary offset: +%p\n", &print_date - print_date_no_aslr);
     printf("- print_date is at %p\n", &print_date);
     printf("- system is at %p\n\n", &system);
 
